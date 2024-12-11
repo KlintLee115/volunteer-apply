@@ -5,25 +5,6 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  // url      = env("PROD_DATABASE_URL")
-}
-
-enum ApplicantOfferStatus {
-  Incomplete
-  In_Progress
-  Completed
-}
-
-enum ApplicantFollowUpEmails {
-  Not_Applicable
-  First_Follow_Up
-  Second_Follow_Up
-}
-
-enum ApplicantResponse {
-  Still_Interested
-  Not_Interested
-  Action_Required
 }
 
 model Applicant {
@@ -46,7 +27,90 @@ model Applicant {
   offerStatus      ApplicantOfferStatus    @default(Incomplete)
   followUpEmails   ApplicantFollowUpEmails @default(Not_Applicable)
   response         ApplicantResponse?
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+}
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Account {
+  id                String  @id
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  User              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  User         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id                                              String        @id
+  name                                            String?
+  email                                           String?       @unique
+  emailVerified                                   DateTime?
+  image                                           String?
+  createdAt                                       DateTime      @default(now())
+  updatedAt                                       DateTime
+  Account                                         Account[]
+  Session                                         Session[]
+  UserRequest_UserRequest_completedByUserIdToUser UserRequest[] @relation("UserRequest_completedByUserIdToUser")
+  UserRequest_UserRequest_requestByUserIdToUser   UserRequest[] @relation("UserRequest_requestByUserIdToUser")
+}
+
+model UserRequest {
+  id                                       String   @id
+  firstName                                String?
+  lastName                                 String?
+  personalEmail                            String?
+  committee                                String?
+  efEmail                                  String?
+  notes                                    String?
+  status                                   String?  @default("Pending")
+  requestByUserId                          String?
+  completedByUserId                        String?
+  createdAt                                DateTime @default(now())
+  updatedAt                                DateTime
+  User_UserRequest_completedByUserIdToUser User?    @relation("UserRequest_completedByUserIdToUser", fields: [completedByUserId], references: [id])
+  User_UserRequest_requestByUserIdToUser   User?    @relation("UserRequest_requestByUserIdToUser", fields: [requestByUserId], references: [id])
+}
+
+model VerificationToken {
+  id         String   @id
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+enum ApplicantOfferStatus {
+  Incomplete
+  In_Progress
+  Completed
+}
+
+enum ApplicantFollowUpEmails {
+  Not_Applicable
+  First_Follow_Up
+  Second_Follow_Up
+}
+
+enum ApplicantResponse {
+  Still_Interested
+  Not_Interested
+  Action_Required
 }
