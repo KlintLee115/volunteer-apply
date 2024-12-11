@@ -1,101 +1,191 @@
-import Image from "next/image";
+"use client"
 
-export default function Home() {
+import { VOLUNTEER_POSITIONS as positions} from '@/constants/volunteer-positions'
+import { useSearchParams } from 'next/navigation'
+import { useEffect, useRef, useState } from 'react'
+import Select, { SelectInstance } from 'react-select'
+
+type OptionType = {
+  value: string
+  label: string
+}
+
+export default function VolunteerApplyPage() {
+  const params = useSearchParams()
+  const positionParam = params.get('position')
+  const rolesOptions: OptionType[] = positions.map((position) => ({
+    value: position,
+    label: position,
+  }))
+
+  const initialRole = rolesOptions.find((role) => role.value === positionParam)
+
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [email, setEmail] = useState('')
+  const [message, setMessage] = useState('')
+  const [selectedRoles, setSelectedRoles] = useState(initialRole?.value ?? '')
+  const [resume, setResume] = useState<File | null>(null)
+  const [sending, setSending] = useState(false)
+
+  const selectRef = useRef<SelectInstance | null>(null)
+
+  const handleResumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setResume(e.target.files[0])
+    }
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    setSending(true)
+    setTimeout(() => {
+      setSending(false)
+      alert('Form submitted successfully!')
+    }, 1000)
+  }
+
+  useEffect(() => {
+    if (!selectRef.current || !initialRole) return
+    selectRef.current.selectOption(initialRole)
+  }, [selectRef.current, initialRole?.value])
+
+  const handlePositionChange = (newValue: unknown) => {
+    const selectedRoles = (newValue as OptionType[]).map(
+      (option) => option.value,
+    )
+
+    const Roles = selectedRoles.join(',')
+    setSelectedRoles(Roles)
+  }
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+    <div className='flex items-center justify-center px-4'>
+      <div className='w-full max-w-lg rounded-lg p-6 text-white shadow-lg'>
+        <h1 className='mb-4 text-center text-2xl font-bold'>
+          Share Your Details
+        </h1>
+        <p className='mb-6 text-center text-sm text-gray-300'>
+          Send us your resume for volunteering opportunities.
+        </p>
+        <form className='space-y-4' onSubmit={handleSubmit}>
+          <div className='flex flex-col sm:flex-row sm:space-x-4'>
+            <input
+              className='flex-1 rounded-lg border border-gray-600 bg-customDark px-8 py-5 text-white focus:outline-none'
+              placeholder='First Name*'
+              type='text'
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              id='volunteerf-first-name'
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <input
+              className='mt-2 flex-1 rounded-lg border border-gray-600 bg-customDark px-8 py-5 text-white focus:outline-none sm:mt-0'
+              placeholder='Last Name*'
+              type='text'
+              value={lastName}
+              id='volunteerf-last-name'
+              onChange={(e) => setLastName(e.target.value)}
+            />
+          </div>
+
+          <input
+            className='w-full rounded-lg border border-gray-600 bg-customDark px-8 py-5 text-white focus:outline-none'
+            placeholder='Email*'
+            type='email'
+            id='volunteerf-email'
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+
+          <div>
+            <input
+              type='hidden'
+              name='roles'
+              id='volunteerf-roles'
+              value={selectedRoles}
+            />
+
+            <Select
+              ref={selectRef}
+              isMulti
+              required
+              name='roles'
+              options={rolesOptions}
+              placeholder='Select roles of interest*'
+              className='input z-20 mt-[30px] fill-inherit text-left text-black'
+              classNamePrefix='react-select'
+              onChange={handlePositionChange}
+              closeMenuOnSelect={false}
+              defaultValue={initialRole}
+              components={{
+                DropdownIndicator: () => (
+                  <div className='mr-2 flex items-center'>
+                    <i className='icon-[mdi--arrow-down-drop] text-3xl dark:text-white'></i>
+                  </div>
+                ),
+              }}
+              styles={{
+                input: (base) => ({
+                  ...base,
+                  paddingLeft: 10,
+                }),
+                indicatorSeparator: () => ({ display: 'hidden' }),
+              }}
+              classNames={{
+                control: () => 'select-container',
+              }}
+            />
+          </div>
+
+          <div className='mt-2'>
+            <label className='block cursor-pointer rounded-lg bg-blue-500 px-4 py-2 text-center text-white hover:bg-blue-600 focus:outline-none'>
+              Upload Resume
+              <input
+                type='file'
+                hidden
+                onChange={handleResumeChange}
+                accept='.pdf,.doc,.docx'
+              />
+            </label>
+            {resume && (
+              <p className='mt-2 text-center text-sm text-gray-300'>
+                Selected File: {resume.name}
+              </p>
+            )}
+          </div>
+
+          <textarea
+            className='h-32 w-full resize-none rounded-lg border border-gray-600 bg-customDark px-4 py-2 text-white focus:outline-none'
+            placeholder='Your message*'
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+          />
+
+          <button
+            type='submit'
+            className={`w-full rounded-lg bg-blue-500 px-8 py-5 font-semibold text-white hover:bg-blue-600 focus:outline-none ${
+              !firstName ||
+              !lastName ||
+              !email ||
+              !message ||
+              !selectedRoles ||
+              !resume
+                ? 'cursor-not-allowed opacity-90'
+                : ''
+            }`}
+            disabled={
+              !firstName ||
+              !lastName ||
+              !email ||
+              !message ||
+              !selectedRoles ||
+              !resume
+            }
           >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+            {sending ? 'Sending...' : 'Submit'}
+          </button>
+        </form>
+      </div>
     </div>
-  );
+  )
 }

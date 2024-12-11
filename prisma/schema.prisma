@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // url      = env("PROD_DATABASE_URL")
+}
+
+enum ApplicantOfferStatus {
+  Incomplete
+  In_Progress
+  Completed
+}
+
+enum ApplicantFollowUpEmails {
+  Not_Applicable
+  First_Follow_Up
+  Second_Follow_Up
+}
+
+enum ApplicantResponse {
+  Still_Interested
+  Not_Interested
+  Action_Required
+}
+
+model Applicant {
+  id               String                  @id @default(cuid())
+  firstName        String
+  lastName         String
+  email            String                  @unique
+  message          String?
+  resume           String
+  position         String[]
+  platform         String[]
+  coverLetter      String?
+  notes            String?
+  applicationDate  DateTime                @default(now())
+  interviewDate    DateTime?
+  interviewTime    DateTime?
+  offerDate        DateTime?
+  availabilityDate DateTime?
+  lastFollowUpDate DateTime?
+  offerStatus      ApplicantOfferStatus    @default(Incomplete)
+  followUpEmails   ApplicantFollowUpEmails @default(Not_Applicable)
+  response         ApplicantResponse?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
