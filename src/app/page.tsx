@@ -4,7 +4,7 @@ import { VOLUNTEER_POSITIONS as positions} from '@/constants/volunteer-positions
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import Select, { SelectInstance } from 'react-select'
-
+ 
 type OptionType = {
   value: string
   label: string
@@ -36,12 +36,32 @@ export default function VolunteerApplyPage() {
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit =  (e: React.FormEvent) => {
+    let formData = {
+      firstName,
+      lastName,
+      email,
+      message,
+      selectedRoles
+    };
     e.preventDefault()
     setSending(true)
-    setTimeout(() => {
+    //add the applicant
+    
+    setTimeout(async() => {
+      const response = await fetch('/api/createApplicant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
       setSending(false)
+      if(response)
+      {
       alert('Form submitted successfully!')
+      }
+      else{
+        alert("Some Errors");
+      }
     }, 1000)
   }
 
