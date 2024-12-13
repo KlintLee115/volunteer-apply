@@ -30,7 +30,7 @@ export default function VolunteerApplyPage() {
   const [resume, setResume] = useState<File | null>(null);
   const [sending, setSending] = useState(false);
   const [recaptchaLoaded, setRecaptchaLoaded] = useState(false);
-
+  const [isClient, setIsClient] = useState(false);
   const selectRef = useRef<SelectInstance | null>(null);
 
   const handleResumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -39,12 +39,22 @@ export default function VolunteerApplyPage() {
     }
   };
 
+  const handlePositionChange = (newValue: unknown) => {
+    const selectedRoles = (newValue as OptionType[]).map(
+      (option) => option.value
+    );
+
+    const Roles = selectedRoles.join(",");
+    setSelectedRoles(Roles);
+  };
+
   useEffect(() => {
+    setIsClient(true);
+
     const loadRecaptcha = () => {
       if (typeof window !== "undefined" && !window.grecaptcha) {
         const script = document.createElement("script");
-        script.src = `https://www.google.com/recaptcha/api.js?render=${env.NEXT_PUBLIC_GOOGLE_RECAPTCHA_SITE_KEY}`;
-        script.async = true;
+        script.src = `https://www.google.com/recaptcha/api.js?render=${env.GOOGLE_RECAPTCHA_SITE_KEY}`;
         script.onload = () => {
           if (window.grecaptcha) {
             console.log("reCAPTCHA loaded successfully");
@@ -63,7 +73,6 @@ export default function VolunteerApplyPage() {
 
     loadRecaptcha();
   }, []);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSending(true);
@@ -72,7 +81,7 @@ export default function VolunteerApplyPage() {
       console.log("reCAPTCHA client available, executing...");
 
       window.grecaptcha
-        .execute()
+        .execute(env.GOOGLE_RECAPTCHA_SITE_KEY)
         .then(async (token) => {
           console.log("Received reCAPTCHA token:", token);
 
@@ -120,14 +129,9 @@ export default function VolunteerApplyPage() {
     selectRef.current.selectOption(initialRole);
   }, [initialRole]);
 
-  const handlePositionChange = (newValue: unknown) => {
-    const selectedRoles = (newValue as OptionType[]).map(
-      (option) => option.value
-    );
-
-    const Roles = selectedRoles.join(",");
-    setSelectedRoles(Roles);
-  };
+  if (!isClient) {
+    return null;
+  }
 
   return (
     <div className="flex items-center justify-center px-4">
@@ -172,7 +176,9 @@ export default function VolunteerApplyPage() {
               classNamePrefix="react-select"
               onChange={handlePositionChange}
               closeMenuOnSelect={false}
-              defaultValue={initialRole}
+              value={rolesOptions.filter((role) =>
+                selectedRoles.includes(role.value)
+              )}
               components={{
                 DropdownIndicator: () => (
                   <div className="mr-2 flex items-center">
