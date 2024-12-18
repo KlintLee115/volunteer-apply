@@ -47,6 +47,6 @@ export async function addApplicant({
             throw new Error(ERROR_TYPES.DUPLICATE_EMAIL.Message);
           }
         }
-        throw new Error('Something went wrong');
+       // throw new Error('Something went wrong');
       }
 }

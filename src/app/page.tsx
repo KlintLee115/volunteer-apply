@@ -128,6 +128,7 @@ export default function VolunteerApplyPage() {
           {/* Roles */}
           <Select
             isMulti
+            instanceId="my-select"
             name="roles"
             options={rolesOptions}
             placeholder="Select roles of interest*"
